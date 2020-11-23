@@ -1,0 +1,38 @@
+org: paulcothenet
+app: climatechangemakers
+service: slack-to-airtable
+
+provider:
+  name: aws
+  profile: perso
+  region: us-west-2
+  runtime: nodejs12.x
+
+# plugins:
+#   - serverless-plugin-typescript
+
+# package:
+#   exclude:
+#     - node_modules/puppeteer/.local-chromium/**
+
+functions:
+  sync:
+    handler: sync.handler
+    environment:
+      SLACK_TOKEN: ${ssm:/ccm/slack/token~true}
+      AIRTABLE_API_KEY: ${ssm:/ccm/airtable/api_key~true}
+      AIRTABLE_BASE: ${ssm:/ccm/airtable/base~true}
+    memorySize: 512
+    timeout: 60
+    events:
+      - schedule: rate(2 hours)
+  active:
+    handler: active.handler
+    environment:
+      SLACK_TOKEN: ${ssm:/ccm/slack/token~true}
+      AIRTABLE_API_KEY: ${ssm:/ccm/airtable/api_key~true}
+      AIRTABLE_BASE: ${ssm:/ccm/airtable/base~true}
+    memorySize: 512
+    timeout: 360
+    events:
+      - schedule: rate(25 minutes)

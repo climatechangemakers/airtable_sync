@@ -7,17 +7,9 @@
     "module": "commonjs",
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "lib": [
-      "es6",
-      "esnext"
-    ],
+    "lib": ["es6", "esnext"],
     "target": "es6"
   },
-  "include": [
-    "slack/**/*"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist"
-  ]
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
 }

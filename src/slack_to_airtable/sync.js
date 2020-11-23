@@ -26,42 +26,8 @@ function parseUserResponse(members) {
   return _.compact(shortList);
 }
 
-
-async function getChannelMemberships() {
-  const channelMembership = { };
-  const teamIds = Object.keys(teams);
-  await Promise.all(teamIds.map(throat(1, async (teamId) => {
-    const teamName = teams[teamId];
-    console.log(`fetching team ${teamName}`);
-    const { members } = await slack.conversations.members({ channel: teamId });
-    channelMembership[teamName] = members;
-  })));
-  return channelMembership;
-}
-
-function getMembershipMap(slackUsers, channelMembership) {
-  const membershipMap = {}
-  slackUsers.forEach((slackUser) => {
-    const teamsForThisUser = [];
-    Object.values(teams).forEach((teamName) => {
-      const channelMembers = channelMembership[teamName];
-      const isInTeam = channelMembers.find(elem => {
-        return elem === slackUser.id
-      });
-      // console.log(slackUser.id, slackUser.email, teamName, isInTeam);
-      if (isInTeam) {
-        teamsForThisUser.push(teamName)
-      }
-    })
-    membershipMap[slackUser.id] = teamsForThisUser
-  });
-  return membershipMap;
-}
-
-async function updateAirtable(slackUsers, membershipMap) {
-  // console.log(JSON.stringify(slackUsers));
+async function updateAirtable(slackUsers) {
   base('CRM').select({
-    // Selecting the first 3 records in Grid view:
     // maxRecords: 100,
     view: "Grid view"
   }).eachPage(async function page(records, fetchNextPage) {
@@ -90,22 +56,6 @@ async function updateAirtable(slackUsers, membershipMap) {
           console.log(err);
         }
       }
-      const slackMemberId = record.get('Slack Member ID');
-      if (slackMemberId) {
-        const existingTeams = record.get('Team') || [];
-        const newTeams = membershipMap[slackMemberId];
-        // only update if the new list of teams is different from the old list of teams
-        if (!_.isEqual(existingTeams.sort(), newTeams.sort())) {
-          try {
-            await record.updateFields({
-              'Team': newTeams,
-              'Last updated by Bot': moment().format('YYYY-MM-DD')
-            })
-          } catch (err) {
-            console.log(err);
-          }
-        }
-      }
     })));
 
     // To fetch the next page of records, call `fetchNextPage`.
@@ -121,15 +71,12 @@ async function updateAirtable(slackUsers, membershipMap) {
   });
 }
 
-async function run() {
+exports.handler = async function(_event, context) {
   try {
     const slackUsers = await getSlackUsers();
-    const channelMembers = await getChannelMemberships();
-    const membershipMap = getMembershipMap(slackUsers, channelMembers);
-    await updateAirtable(slackUsers, membershipMap);
+    console.log(slackUsers);
+    await updateAirtable(slackUsers);
   } catch (err) {
     console.log(err);
   }
 }
-
-run()
