@@ -22,7 +22,7 @@ functions:
       SLACK_TOKEN: ${ssm:/ccm/slack/token~true}
       AIRTABLE_API_KEY: ${ssm:/ccm/airtable/api_key~true}
       AIRTABLE_BASE: ${ssm:/ccm/airtable/base~true}
-    memorySize: 512
+    memorySize: 256
     timeout: 60
     events:
       - schedule: rate(2 hours)
@@ -32,7 +32,7 @@ functions:
       SLACK_TOKEN: ${ssm:/ccm/slack/token~true}
       AIRTABLE_API_KEY: ${ssm:/ccm/airtable/api_key~true}
       AIRTABLE_BASE: ${ssm:/ccm/airtable/base~true}
-    memorySize: 512
+    memorySize: 256
     timeout: 360
     events:
       - schedule: rate(25 minutes)
