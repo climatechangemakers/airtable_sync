@@ -137,5 +137,3 @@ exports.handler = async function(_event, context) {
     console.log(err);
   }
 }
-
-exports.handler();

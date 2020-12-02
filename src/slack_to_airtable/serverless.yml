@@ -33,6 +33,16 @@ functions:
       AIRTABLE_API_KEY: ${ssm:/ccm/airtable/api_key~true}
       AIRTABLE_BASE: ${ssm:/ccm/airtable/base~true}
     memorySize: 256
-    timeout: 360
+    timeout: 600
     events:
       - schedule: rate(25 minutes)
+  channels:
+    handler: channels.handler
+    environment:
+      SLACK_TOKEN: ${ssm:/ccm/slack/token~true}
+      AIRTABLE_API_KEY: ${ssm:/ccm/airtable/api_key~true}
+      AIRTABLE_BASE: ${ssm:/ccm/airtable/base~true}
+    memorySize: 256
+    timeout: 360
+    events:
+      - schedule: rate(4 hours)
