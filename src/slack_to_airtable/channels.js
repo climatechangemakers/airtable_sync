@@ -5,11 +5,11 @@ const {
 const moment = require('moment');
 const throat = require('throat');
 const _ = require('lodash');
-const teams = require('./teams');
 
 const slack = new WebClient(process.env.SLACK_TOKEN);
-
 const base = require('airtable').base(process.env.AIRTABLE_BASE);
+
+const teams = {};
 
 async function getSlackUsers() {
   const { members } = await slack.users.list();
@@ -26,31 +26,57 @@ function parseUserResponse(members) {
   return _.compact(shortList);
 }
 
+async function getTeamsFromAirtable() {
+  if (Object.keys(teams).length) { return teams } // return teams is already cached
+  await new Promise((resolve, reject) => {
+    base('Teams')
+      .select({ view: "Grid view"})
+      .eachPage(async function page(records, fetchNextPage) {
+      // This function (`page`) will get called for each page of records.
+      records.forEach(record => {
+        const { id } = record;
+        const inventory = record.get('Inventory');
+        if (inventory) {
+          const name = record.get('Slack Team Name');
+          const slackTeamId = record.get('Slack Team ID');
+          teams[slackTeamId] = { name, id };
+        };
+      });
+      fetchNextPage();
+    }, function done(err) {
+      return err ? reject(err) : resolve();
+    });
+  })
+  return teams;
+}
 
 async function getChannelMemberships() {
   const channelMembership = { };
-  const teamIds = Object.keys(teams);
-  await Promise.all(teamIds.map(throat(1, async (teamId) => {
-    const teamName = teams[teamId];
-    console.log(`fetching team ${teamName}`);
-    const { members } = await slack.conversations.members({ channel: teamId });
-    channelMembership[teamName] = members;
+  const teams = await getTeamsFromAirtable();
+  console.log(teams);
+  const slackTeamIds = Object.keys(teams);
+  await Promise.all(slackTeamIds.map(throat(1, async (slackTeamId) => {
+    const { id, name } = teams[slackTeamId];
+    console.log(`fetching team ${name}`);
+    const { members } = await slack.conversations.members({ channel: slackTeamId });
+    console.log(members.length);
+    channelMembership[id] = members;
   })));
   return channelMembership;
 }
 
-function getMembershipMap(slackUsers, channelMembership) {
+async function getMembershipMap(slackUsers, channelMembership) {
+  console.log(channelMembership);
   const membershipMap = {}
+  const teams = await getTeamsFromAirtable();
+  console.log(teams);
   slackUsers.forEach((slackUser) => {
     const teamsForThisUser = [];
-    Object.values(teams).forEach((teamName) => {
-      const channelMembers = channelMembership[teamName];
-      const isInTeam = channelMembers.find(elem => {
-        return elem === slackUser.id
-      });
-      // console.log(slackUser.id, slackUser.email, teamName, isInTeam);
+    Object.values(teams).forEach(({ id: teamAirtableId }) => {
+      const channelMembers = channelMembership[teamAirtableId];
+      const isInTeam = channelMembers.find(elem => elem === slackUser.id);
       if (isInTeam) {
-        teamsForThisUser.push(teamName)
+        teamsForThisUser.push(teamAirtableId)
       }
     })
     membershipMap[slackUser.id] = teamsForThisUser
@@ -59,77 +85,49 @@ function getMembershipMap(slackUsers, channelMembership) {
 }
 
 async function updateAirtable(slackUsers, membershipMap) {
-  // console.log(JSON.stringify(slackUsers));
-  base('CRM').select({
-    // Selecting the first 3 records in Grid view:
-    // maxRecords: 100,
-    view: "Grid view"
-  }).eachPage(async function page(records, fetchNextPage) {
-    // This function (`page`) will get called for each page of records.
-    await Promise.all(records.map(throat(1, async (record) => {
-      // console.log(record);
-      const email = record.get('Email');
-      const name = `${record.get('First Name')} ${record.get('Last Name')}`
-      const slackJoinedDate = record.get('Slack Joined Date');
-      // console.log(email,name)
-      const slackMatch = slackUsers.find(slackUser => {
-        if (!slackUser.email) { return; }
-        return slackUser.email.toLowerCase() === email.toLowerCase().trim()
-          || (slackUser.real_name && slackUser.real_name.toLowerCase()) === name.toLowerCase();
-      });
-      if (slackMatch && !slackJoinedDate) {
-        console.log(email, slackJoinedDate, slackMatch);
-        try {
-          await record.updateFields({
-            'Slack Joined Date': slackMatch.updatedDate,
-            'Slack Member ID': slackMatch.id,
-            'Slack': 'Joined',
-            'Last updated by Bot': moment().format('YYYY-MM-DD')
-          })
-        } catch (err) {
-          console.log(err);
+  return new Promise((resolve, reject) => {
+    base('CRM').select({ view: "Grid view"})
+      .eachPage(async function page(records, fetchNextPage) {
+      // This function (`page`) will get called for each page of records.
+      await Promise.all(records.map(throat(1, async (record) => {
+        // console.log(record);
+        const slackMemberId = record.get('Slack Member ID');
+        if (slackMemberId) {
+          const existingTeams = record.get('Teams') || [];
+          const newTeams = membershipMap[slackMemberId];
+          // only update if the new list of teams is different from the old list of teams
+          if (!_.isEqual(existingTeams.sort(), newTeams.sort())) {
+            try {
+              await record.updateFields({
+                'Teams': newTeams,
+                'Last updated by Bot': moment().format('YYYY-MM-DD')
+              })
+            } catch (err) {
+              console.log(err);
+            }
+          }
         }
-      }
-      // const slackMemberId = record.get('Slack Member ID');
-      // if (slackMemberId) {
-      //   const existingTeams = record.get('Team') || [];
-      //   const newTeams = membershipMap[slackMemberId];
-      //   // only update if the new list of teams is different from the old list of teams
-      //   if (!_.isEqual(existingTeams.sort(), newTeams.sort())) {
-      //     try {
-      //       await record.updateFields({
-      //         'Team': newTeams,
-      //         'Last updated by Bot': moment().format('YYYY-MM-DD')
-      //       })
-      //     } catch (err) {
-      //       console.log(err);
-      //     }
-      //   }
-      // }
-    })));
-
-    // To fetch the next page of records, call `fetchNextPage`.
-    // If there are more records, `page` will get called again.
-    // If there are no more records, `done` will get called.
-    fetchNextPage();
-
-  }, function done(err) {
-    if (err) {
-      console.error(err);
-      return;
-    }
+      })));
+      fetchNextPage();
+    }, function done(err) {
+      return err ? reject(err) : resolve();
+    });
   });
+
 }
 
 exports.handler = async function(_event, context) {
   try {
     const slackUsers = await getSlackUsers();
-    console.log(slackUsers);
-    // const channelMembers = await getChannelMemberships();
-    // const membershipMap = getMembershipMap(slackUsers, channelMembers);
-    // await updateAirtable(slackUsers, membershipMap);
-    await updateAirtable(slackUsers);
+    // console.log(slackUsers);
+    const channelMembers = await getChannelMemberships();
+    // console.log(channelMembers);
+    const membershipMap = await getMembershipMap(slackUsers, channelMembers);
+    // console.log(membershipMap);
+    await updateAirtable(slackUsers, membershipMap);
   } catch (err) {
     console.log(err);
   }
 }
+
+exports.handler();
