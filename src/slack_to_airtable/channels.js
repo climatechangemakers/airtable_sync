@@ -50,6 +50,13 @@ async function getTeamsFromAirtable() {
   return teams;
 }
 
+async function getSlackMembersForATeam(channel) {
+  const res = await slack.conversations.members({ channel: slackTeamId });
+  console.log(res);
+  const { members } = res;
+  console.log(members.length);
+}
+
 async function getChannelMemberships() {
   const channelMembership = { };
   const teams = await getTeamsFromAirtable();
@@ -58,8 +65,7 @@ async function getChannelMemberships() {
   await Promise.all(slackTeamIds.map(throat(1, async (slackTeamId) => {
     const { id, name } = teams[slackTeamId];
     console.log(`fetching team ${name}`);
-    const { members } = await slack.conversations.members({ channel: slackTeamId });
-    console.log(members.length);
+    const members = await getSlackMembersForATeam(slackTeamId);
     channelMembership[id] = members;
   })));
   return channelMembership;
