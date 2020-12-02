@@ -35,8 +35,8 @@ async function getTeamsFromAirtable() {
       // This function (`page`) will get called for each page of records.
       records.forEach(record => {
         const { id } = record;
-        const inventory = record.get('Inventory');
-        if (inventory) {
+        const sync = record.get('Sync');
+        if (sync) {
           const name = record.get('Slack Team Name');
           const slackTeamId = record.get('Slack Team ID');
           teams[slackTeamId] = { name, id };
@@ -51,10 +51,15 @@ async function getTeamsFromAirtable() {
 }
 
 async function getSlackMembersForATeam(channel) {
-  const res = await slack.conversations.members({ channel: slackTeamId });
-  console.log(res);
-  const { members } = res;
-  console.log(members.length);
+  let allMembers = [];
+  // doc for pagination here: https://slack.dev/node-slack-sdk/web-api#pagination
+  for await (const page of slack.paginate('conversations.members', { channel })) {
+    const { members } = page;
+    console.log(members.length);
+    allMembers = allMembers.concat(members);
+  }
+  console.log(allMembers.length);
+  return allMembers;
 }
 
 async function getChannelMemberships() {
@@ -72,10 +77,9 @@ async function getChannelMemberships() {
 }
 
 async function getMembershipMap(slackUsers, channelMembership) {
-  console.log(channelMembership);
+  // console.log(channelMembership);
   const membershipMap = {}
   const teams = await getTeamsFromAirtable();
-  console.log(teams);
   slackUsers.forEach((slackUser) => {
     const teamsForThisUser = [];
     Object.values(teams).forEach(({ id: teamAirtableId }) => {
@@ -103,6 +107,7 @@ async function updateAirtable(slackUsers, membershipMap) {
           const newTeams = membershipMap[slackMemberId];
           // only update if the new list of teams is different from the old list of teams
           if (!_.isEqual(existingTeams.sort(), newTeams.sort())) {
+            console.log(`update ${slackMemberId}`);
             try {
               await record.updateFields({
                 'Teams': newTeams,
@@ -125,11 +130,8 @@ async function updateAirtable(slackUsers, membershipMap) {
 exports.handler = async function(_event, context) {
   try {
     const slackUsers = await getSlackUsers();
-    // console.log(slackUsers);
     const channelMembers = await getChannelMemberships();
-    // console.log(channelMembers);
     const membershipMap = await getMembershipMap(slackUsers, channelMembers);
-    // console.log(membershipMap);
     await updateAirtable(slackUsers, membershipMap);
   } catch (err) {
     console.log(err);
