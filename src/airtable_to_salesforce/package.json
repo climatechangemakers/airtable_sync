@@ -1,5 +1,5 @@
 {
-  "name": "@climatechangemakers/slack",
+  "name": "@climatechangemakers/salesforce",
   "description": "Sync engagement data to salesforce",
   "main": "./index.js",
   "version": "0.1.0",
@@ -43,13 +43,13 @@
     "all": true
   },
   "dependencies": {
-    "@slack/web-api": "^5.13.0",
     "airtable": "0.10.1",
     "axios": "0.21.0",
-    "dotenv": "^8.2.0",
+    "dotenv": "8.2.0",
+    "jsforce": "1.10.1",
     "lodash": "4.17.20",
     "moment": "2.29.1",
-    "throat": "^5.0.0"
+    "throat": "5.0.0"
   },
   "devDependencies": {
     "@types/moment": "2.13.0",
