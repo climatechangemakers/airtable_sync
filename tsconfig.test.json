@@ -9,6 +9,6 @@
     "lib": ["es6"],
     "target": "es6"
   },
-  "include": ["**/*.js", "./test/"],
+  "include": ["./test/"],
   "exclude": ["node_modules", "dist"]
 }
