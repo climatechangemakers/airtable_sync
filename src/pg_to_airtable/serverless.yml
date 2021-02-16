@@ -1,0 +1,28 @@
+org: paulcothenet
+app: climatechangemakers
+service: airtable-to-pg
+
+provider:
+  name: aws
+  profile: perso
+  region: us-west-2
+  runtime: nodejs12.x
+
+plugins:
+  - serverless-plugin-typescript
+
+functions:
+  sync:
+    handler: sync.handler
+    environment:
+      AIRTABLE_API_KEY: ${ssm:/ccm/airtable/api_key~true}
+      AIRTABLE_BASE: ${ssm:/ccm/airtable/base~true}
+      PGUSER: ccm_readwrite
+      PGPASSWORD: ${ssm:/ccm/pg/ccm_readwrite~true}
+      PGHOST: ccm-db.c51ekbqkhdej.us-west-2.rds.amazonaws.com
+      PGPORT: 5432
+      PGDATABASE: postgres
+    memorySize: 256
+    timeout: 60
+    events:
+      - schedule: rate(2 hours)
