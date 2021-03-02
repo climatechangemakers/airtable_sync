@@ -27,7 +27,7 @@ CREATE TYPE hoa_event_type as ENUM (
   'ADV_PERSONALIZE_TALKING_POINTS_AND_PERSONAL_NETWORK_OUTREACH',
   'ADV_POLICYMAKER_OUTREACH',
   'ADV_KEY_STAKEHOLDER_AND_PUBLIC_OUTREACH',
-  'ADV_CLIMATE_CONVERSATION',
+  'ADV_CLIMATE_CONVERSATION_WITH_POLICYMAKER',
   'ELECTORAL'
 );
 
@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS actions_raw (
   intent action_intent NOT NULL,
   count INTEGER NOT NULL CHECK (count > 0),
   source action_source NOT NULL,
-  audience audience NOT NULL,
+  audience audience,
   other_form_inputs JSONB
 );
 
