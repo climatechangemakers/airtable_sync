@@ -3,6 +3,7 @@ from enum import Enum, unique
 from typing import List, Mapping, NamedTuple, Optional, Tuple
 import uuid
 import csv
+import json
 
 import click
 import dateparser
@@ -59,6 +60,20 @@ class RawAction(NamedTuple):
     other_form_inputs: Mapping
     form_response_id: str
 
+    def to_csv_record(self):
+        return {
+            'email': self.email,
+            'full_name': self.full_name,
+            'date': self.date.strftime('%Y-%m-%d'),
+            'action': self.action.value,
+            'intent': self.intent.value,
+            'count': self.count,
+            'source': self.source.value,
+            'audience': self.audience.value,
+            'other_form_inputs': json.dumps(self.other_form_inputs),
+            'form_response_id': self.form_response_id,
+        }
+
 
 @unique
 class FormField(Enum):
@@ -93,6 +108,10 @@ _FORMFIELD_TO_FORM_COLUMN = {
     FormField.ACTION_SOURCE: "Source of action",
 }
 
+# _ACTION_SOURCE_MAPPING = {
+# 'Sunday Hour of Action': ActionSource.
+# }
+
 
 class FormResponse:
     def __init__(self, form_response: Mapping[str, str]):
@@ -125,6 +144,9 @@ class FormResponse:
 
     def _get_source(self):
         # TODO(mike): Implement.
+        action_source_value = self._get_response_value(FormField.ACTION_SOURCE)
+
+
         return ActionSource.HOUR_OF_ACTION
 
     def _get_audience(self):
@@ -159,15 +181,19 @@ class FormResponse:
 
 
 @click.command()
-@click.argument('form_responses_csv')
-def get_actions_from_form_responses(form_responses_csv):
-    with open(form_responses_csv, "r") as infile:
-        reader = csv.DictReader(infile)
-        for record in reader:
-            form_response = FormResponse(record)
-            print(form_response)
-            for raw_action in form_response.as_raw_actions():
-                print(raw_action)
+@click.argument('form_responses_filename')
+@click.argument('output_filename')
+def get_actions_from_form_responses(form_responses_filename, output_filename):
+    with open(form_responses_filename, "r") as infile:
+        with open(output_filename, 'w') as outfile:
+            reader = csv.DictReader(infile)
+            writer = csv.DictWriter(outfile, RawAction._fields)
+            for record in reader:
+                form_response = FormResponse(record)
+                print(form_response)
+                for raw_action in form_response.as_raw_actions():
+                    print(raw_action)
+                    writer.writerow(raw_action.to_csv_record())
 
 
 if __name__ == "__main__":
