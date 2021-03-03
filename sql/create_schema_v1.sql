@@ -20,7 +20,7 @@ CREATE TYPE action AS ENUM (
 CREATE TYPE audience AS ENUM (
   'PERSONAL_NETWORK',
   'POLICYMAKER',
-  'INFLUENCER',
+  'STAKEHOLDER',
   'PUBLIC'
 );
 CREATE TYPE hoa_event_type as ENUM (
@@ -40,7 +40,8 @@ CREATE TABLE IF NOT EXISTS actions_raw (
   count INTEGER NOT NULL CHECK (count > 0),
   source action_source NOT NULL,
   audience audience,
-  other_form_inputs JSONB
+  other_form_inputs JSONB,
+  form_response_id VARCHAR(256)
 );
 
 CREATE TABLE IF NOT EXISTS hoa_events (
