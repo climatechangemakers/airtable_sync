@@ -51,7 +51,7 @@ class Action(Enum):
     OP_ED = "OP_ED"
     EDITORIAL = "EDITORIAL"
     PERSONALIZED_TALKING_POINTS = "PERSONALIZED_TALKING_POINTS"
-    UNKNOWN = "UNKNOWN"
+    OTHER = "OTHER"
 
 
 class RawAction(NamedTuple):
@@ -122,9 +122,23 @@ _AUDIENCE_FORM_VALUE_TO_AUDIENCE = {
     "No outreach yet, but I'm ready to start a climate conversation with my friends, family, and/or followers using my personalized talking points": None,
 }
 
-# _ACTION_SOURCE_MAPPING = {
-# 'Sunday Hour of Action': ActionSource.
-# }
+_ACTION_FORM_VALUE_TO_ACTION = {
+    "Phone calls": Action.PHONE_CALLS,
+    "Personal letters/emails or constituent comments or postcards": Action.CONSTITUENT_LETTERS,
+    "Personal meeting": Action.PERSONAL_MEETING,
+    "Social media interactions (contact via Twitter or Facebook or other social media platform)": Action.SOCIAL_MEDIA_CONTACT,
+    "Town hall": Action.TOWN_HALL,
+    "Lobby meeting": Action.LOBBY_MEETING,
+    "Personal text/call/message -- to someone in your personal network": Action.RELATIONAL_ORGANIZING_PERSONAL_MESSAGE,
+    "Social media post -- wrote and shared to your network": Action.RELATIONAL_ORGANIZING_SOCIAL_MEDIA,
+    "Blog post (e.g. Medium, LinkedIn) -- wrote and shared to your network": Action.BLOG_POST,
+    "Article written by a reporter -- was interviewed or quoted in": Action.ARTICLE_BY_REPORTER,
+    "Podcast -- was interviewed in or hosted": Action.PODCAST,
+    "TV broadcast -- was interviewed in or hosted": Action.TV_BROADCAST,
+    "Letter to the editor -- wrote or signed": Action.LETTER_TO_THE_EDITOR,
+    "Op-ed -- wrote or signed": Action.OP_ED,
+    "Editorial -- wrote or signed": Action.EDITORIAL,
+}
 
 
 class FormResponse:
@@ -138,8 +152,8 @@ class FormResponse:
         )
         actions_policymaker_or_stakeholder = (
             [
-                self._get_action(action_str)
-                for action_str in ",".split(actions_policymaker_or_stakeholder_str)
+                self._get_action(action_str.strip())
+                for action_str in actions_policymaker_or_stakeholder_str.split(",")
             ]
             if actions_policymaker_or_stakeholder_str
             else []
@@ -148,23 +162,27 @@ class FormResponse:
         actions_public_str = self._get_response_value(FormField.ACTIONS_PUBLIC)
         actions_public = (
             [
-                self._get_action(action_str)
-                for action_str in ",".split(actions_public_str)
+                self._get_action(action_str.strip())
+                for action_str in actions_public_str.split(",")
             ]
             if actions_public_str
             else []
         )
-        actions = (
-            actions_policymaker_or_stakeholder or actions_public or [Action.UNKNOWN]
-        )
+        actions = actions_policymaker_or_stakeholder or actions_public or [Action.OTHER]
         return [self._get_raw_action(action) for action in actions]
 
     def _get_response_value(self, field: FormField):
         return self.form_response[_FORMFIELD_TO_FORM_COLUMN[field]]
 
     def _get_action(self, form_action_value: str) -> Action:
-        # TODO(mike): Implement correctly.
-        return Action.ARTICLE_BY_REPORTER
+        action = _ACTION_FORM_VALUE_TO_ACTION.get(form_action_value)
+        if action is not None:
+            return action
+        LOG.warning(
+            "Action form value not found, returning {Action.OTHER}: "
+            f"{form_action_value}"
+        )
+        return Action.OTHER
 
     def _get_action_count(self) -> int:
         # TODO(mike): Implement correctly.
@@ -175,9 +193,7 @@ class FormResponse:
         return ActionSource.HOUR_OF_ACTION
 
     def _get_audience(self) -> Optional[Audience]:
-        # TODO(mike): Implement correctly.
         audience_form_value = self._get_response_value(FormField.AUDIENCE)
-        # print(audience_form_value)
         if audience_form_value in _AUDIENCE_FORM_VALUE_TO_AUDIENCE:
             return _AUDIENCE_FORM_VALUE_TO_AUDIENCE[audience_form_value]
         LOG.warning(
