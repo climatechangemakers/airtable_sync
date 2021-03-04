@@ -2,6 +2,7 @@ require('dotenv').config();
 import { getPostgresClient } from './pg';
 const airtable = require('airtable');
 import throat from 'throat';
+import * as moment from 'moment';
 
 const base = airtable.base(process.env.AIRTABLE_BASE);
 
@@ -35,13 +36,12 @@ async function updateSegment(record: any) {
   try {
     await record.updateFields({
       'HoA Active Segment': segment,
+      'Last updated by Bot': moment().format('YYYY-MM-DD'),
     });
     console.log(`updated record ${airtable_id}`);
   } catch (err) {
     console.log(err);
   }
-
-  // console.log(`Updated 1 record`);
 }
 
 async function syncAirtable() {

@@ -27,6 +27,10 @@ async function upsertRecord(record: any) {
   const signup_date = record.get('Signup Date')
     ? new Date(record.get('Signup Date'))
     : undefined;
+  const referred_by = record.get('Referred By');
+  const one_on_one_status = record.get('1:1 Status');
+  const one_on_one_greeter = record.get('1:1 Greeter');
+  const is_experienced = record.get('Experience?') === 'Yes';
 
   const input = [
     email,
@@ -38,6 +42,10 @@ async function upsertRecord(record: any) {
     slack_joined_date,
     slack_last_active_date,
     state,
+    referred_by,
+    one_on_one_status,
+    one_on_one_greeter,
+    is_experienced,
   ];
 
   const query = `
@@ -50,9 +58,13 @@ async function upsertRecord(record: any) {
     signup_date,
     slack_joined_date,
     slack_last_active_date,
-    state
+    state,
+    referred_by,
+    one_on_one_status,
+    one_on_one_greeter,
+    is_experienced
   )
-  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
   ON CONFLICT (airtable_id)
   DO
   UPDATE SET
@@ -63,7 +75,11 @@ async function upsertRecord(record: any) {
     slack_member_id = EXCLUDED.slack_member_id,
     slack_joined_date = EXCLUDED.slack_joined_date,
     slack_last_active_date = EXCLUDED.slack_last_active_date,
-    state = EXCLUDED.state
+    state = EXCLUDED.state,
+    referred_by = EXCLUDED.referred_by,
+    one_on_one_status = EXCLUDED.one_on_one_status,
+    one_on_one_greeter = EXCLUDED.one_on_one_greeter,
+    is_experienced = EXCLUDED.is_experienced
   ;`;
 
   await pg.query(query, input);

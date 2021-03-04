@@ -34,7 +34,10 @@ CREATE TABLE contacts (
   signup_date TIMESTAMPTZ,
   slack_joined_date TIMESTAMPTZ,
   slack_last_active_date TIMESTAMPTZ,
-  state VARCHAR(32)
+  state VARCHAR(32),
+  referred_by VARCHAR(256),
+  1_1_status VARCHAR(256),
+  1_1_greeter VARCHAR(256)
 );
 CREATE UNIQUE INDEX idx_airtable_id ON contacts (airtable_id);
 ALTER TABLE contacts ADD CONSTRAINT unique_airtable_id UNIQUE USING INDEX idx_airtable_id;
