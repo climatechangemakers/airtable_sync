@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS actions_raw (
   date DATE NOT NULL,
   action action NOT NULL,
   intent action_intent NOT NULL,
-  count INTEGER NOT NULL CHECK (count > 0),
+  count INTEGER CONSTRAINT positive_count CHECK (count > 0),
   source action_source NOT NULL,
   audience audience,
   other_form_inputs JSONB,

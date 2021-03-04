@@ -36,7 +36,7 @@ class ActionIntent(Enum):
 @unique
 class Action(Enum):
     PHONE_CALLS = "PHONE_CALLS"
-    CONSTITUENT_LETTERS = "CONSTITUENT_LETTERS"
+    CONSTITUENT_CONTACT = "CONSTITUENT_CONTACT"
     PERSONAL_MEETING = "PERSONAL_MEETING"
     SOCIAL_MEDIA_CONTACT = "SOCIAL_MEDIA_CONTACT"
     TOWN_HALL = "TOWN_HALL"
@@ -60,7 +60,7 @@ class RawAction(NamedTuple):
     date: date
     action: Action
     intent: ActionIntent
-    count: int
+    count: Optional[int]
     source: ActionSource
     audience: Optional[Audience]
     other_form_inputs: Mapping
@@ -92,7 +92,7 @@ class FormField(Enum):
     AUDIENCE_NAMES = "AUDIENCE_NAMES"
     ACTIONS_POLICYMAKER_OR_STAKEHOLDER = "ACTIONS_POLICYMAKER_OR_STAKEHOLDER"
     PHONE_CALL_COUNT = "PHONE_CALL_COUNT"
-    OTHER_OUTREACH_COUNT = "OTHER_OUTREACH_COUNT"
+    CONSTITUENT_CONTACT_COUNT = "CONSTITUENT_CONTACT_COUNT"
     ACTIONS_PUBLIC = "ACTIONS_PUBLIC"
     MEDIA_DESCRIPTION = "MEDIA_DESCRIPTION"
     EMAIL = "EMAIL"
@@ -108,7 +108,7 @@ _FORMFIELD_TO_FORM_COLUMN = {
     FormField.AUDIENCE_NAMES: "What is the name of the policymaker(s) or stakeholder(s) you contacted?",
     FormField.ACTIONS_POLICYMAKER_OR_STAKEHOLDER: "What did you do?",
     FormField.PHONE_CALL_COUNT: 'If you selected "Phone calls", how many did you make?',
-    FormField.OTHER_OUTREACH_COUNT: 'If you selected "Personal letters/emails or constituent comments or postcards," how many did you write?',
+    FormField.CONSTITUENT_CONTACT_COUNT: 'If you selected "Personal letters/emails or constituent comments or postcards," how many did you write?',
     FormField.ACTIONS_PUBLIC: "What action(s) did you take?",
     FormField.MEDIA_DESCRIPTION: "Can you provide links (preferred) or short descriptions of the media piece(s) checked above?",
     FormField.EMAIL: "Email Address",
@@ -124,7 +124,7 @@ _AUDIENCE_FORM_VALUE_TO_AUDIENCE = {
 
 _ACTION_FORM_VALUE_TO_ACTION = {
     "Phone calls": Action.PHONE_CALLS,
-    "Personal letters/emails or constituent comments or postcards": Action.CONSTITUENT_LETTERS,
+    "Personal letters/emails or constituent comments or postcards": Action.CONSTITUENT_CONTACT,
     "Personal meeting": Action.PERSONAL_MEETING,
     "Social media interactions (contact via Twitter or Facebook or other social media platform)": Action.SOCIAL_MEDIA_CONTACT,
     "Town hall": Action.TOWN_HALL,
@@ -184,9 +184,14 @@ class FormResponse:
         )
         return Action.OTHER
 
-    def _get_action_count(self) -> int:
-        # TODO(mike): Implement correctly.
-        return 1
+    def _get_action_count(self, action: Action) -> Optional[int]:
+        if self._get_audience() not in {Audience.POLICYMAKER, Audience.STAKEHOLDER}:
+            return None
+        if action == Action.PHONE_CALLS:
+            return int(self._get_response_value(FormField.PHONE_CALL_COUNT))
+        if action == Action.CONSTITUENT_CONTACT:
+            return int(self._get_response_value(FormField.CONSTITUENT_CONTACT_COUNT))
+        return None
 
     def _get_source(self):
         # TODO(mike): Handle Anytime actions.
@@ -211,7 +216,7 @@ class FormResponse:
             ).date(),
             action=action,
             intent=ActionIntent.ADVOCACY,
-            count=self._get_action_count(),
+            count=self._get_action_count(action),
             source=self._get_source(),
             audience=self._get_audience(),
             # TODO(mike): Fill this in.
@@ -222,10 +227,6 @@ class FormResponse:
     def __str__(self):
         return pprint.pformat(self.form_response)
 
-    # TODO(mike): schema changes
-    # - remove 'PERSONAL_NETWORK'
-    # - make action count nullable.
-
 
 @click.command()
 @click.argument("form_responses_filename")
@@ -235,6 +236,7 @@ def get_actions_from_form_responses(form_responses_filename, output_filename):
         with open(output_filename, "w") as outfile:
             reader = csv.DictReader(infile)
             writer = csv.DictWriter(outfile, RawAction._fields)
+            writer.writeheader()
             for record in reader:
                 form_response = FormResponse(record)
                 # print(form_response)
