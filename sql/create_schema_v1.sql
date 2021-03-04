@@ -58,3 +58,21 @@ CREATE TABLE IF NOT EXISTS luma_attendance (
   did_join_event BOOL NOT NULL,
   UNIQUE (event_id, email)
 );
+
+CREATE TABLE IF NOT EXISTS contacts (
+  email VARCHAR(256),
+  airtable_id VARCHAR(256),
+  first_name VARCHAR(256),
+  last_name VARCHAR(256),
+  slack_member_id VARCHAR(256),
+  signup_date TIMESTAMPTZ,
+  slack_joined_date TIMESTAMPTZ,
+  slack_last_active_date TIMESTAMPTZ,
+  state VARCHAR(32),
+  referred_by VARCHAR(256),
+  1_1_status VARCHAR(256),
+  1_1_greeter VARCHAR(256),
+  is_experienced BOOLEAN,
+);
+CREATE UNIQUE INDEX idx_airtable_id ON contacts (airtable_id);
+ALTER TABLE contacts ADD CONSTRAINT unique_airtable_id UNIQUE USING INDEX idx_airtable_id;

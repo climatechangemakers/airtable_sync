@@ -37,7 +37,8 @@ CREATE TABLE contacts (
   state VARCHAR(32),
   referred_by VARCHAR(256),
   1_1_status VARCHAR(256),
-  1_1_greeter VARCHAR(256)
+  1_1_greeter VARCHAR(256),
+  is_experienced BOOLEAN,
 );
 CREATE UNIQUE INDEX idx_airtable_id ON contacts (airtable_id);
 ALTER TABLE contacts ADD CONSTRAINT unique_airtable_id UNIQUE USING INDEX idx_airtable_id;
