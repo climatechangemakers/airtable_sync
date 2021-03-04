@@ -1,20 +1,24 @@
+import csv
+import json
+import pprint
+import logging
+import uuid
 from datetime import date
 from enum import Enum, unique
 from typing import List, Mapping, NamedTuple, Optional, Tuple
-import uuid
-import csv
-import json
 
 import click
 import dateparser
 
+LOG = logging.getLogger(__name__)
+
 
 @unique
 class Audience(Enum):
-    PERSONAL_NETWORK = "PERSONAL_NETWORK"
     POLICYMAKER = "POLICYMAKER"
     STAKEHOLDER = "STAKEHOLDER"
     PUBLIC = "PUBLIC"
+    OTHER = "OTHER"
 
 
 @unique
@@ -46,6 +50,8 @@ class Action(Enum):
     LETTER_TO_THE_EDITOR = "LETTER_TO_THE_EDITOR"
     OP_ED = "OP_ED"
     EDITORIAL = "EDITORIAL"
+    PERSONALIZED_TALKING_POINTS = "PERSONALIZED_TALKING_POINTS"
+    UNKNOWN = "UNKNOWN"
 
 
 class RawAction(NamedTuple):
@@ -56,22 +62,23 @@ class RawAction(NamedTuple):
     intent: ActionIntent
     count: int
     source: ActionSource
-    audience: Audience
+    audience: Optional[Audience]
     other_form_inputs: Mapping
     form_response_id: str
 
     def to_csv_record(self):
         return {
-            'email': self.email,
-            'full_name': self.full_name,
-            'date': self.date.strftime('%Y-%m-%d'),
-            'action': self.action.value,
-            'intent': self.intent.value,
-            'count': self.count,
-            'source': self.source.value,
-            'audience': self.audience.value,
-            'other_form_inputs': json.dumps(self.other_form_inputs),
-            'form_response_id': self.form_response_id,
+            # TODO(mike): Do this sanitization somewhere else
+            "email": self.email.lower(),
+            "full_name": self.full_name.strip(),
+            "date": self.date.strftime("%Y-%m-%d"),
+            "action": self.action.value,
+            "intent": self.intent.value,
+            "count": self.count,
+            "source": self.source.value,
+            "audience": self.audience and self.audience.value,
+            "other_form_inputs": json.dumps(self.other_form_inputs),
+            "form_response_id": self.form_response_id,
         }
 
 
@@ -108,6 +115,13 @@ _FORMFIELD_TO_FORM_COLUMN = {
     FormField.ACTION_SOURCE: "Source of action",
 }
 
+_AUDIENCE_FORM_VALUE_TO_AUDIENCE = {
+    "Policymaker (e.g. congressperson, local public official, etc.)": Audience.POLICYMAKER,
+    "Public (personal network e.g. friends, family, coworkers, etc.; or the broader public via blog post, media, etc.)": Audience.PUBLIC,
+    "Stakeholder (e.g. nonprofit, company, organization, etc.)": Audience.STAKEHOLDER,
+    "No outreach yet, but I'm ready to start a climate conversation with my friends, family, and/or followers using my personalized talking points": None,
+}
+
 # _ACTION_SOURCE_MAPPING = {
 # 'Sunday Hour of Action': ActionSource.
 # }
@@ -123,38 +137,56 @@ class FormResponse:
             FormField.ACTIONS_POLICYMAKER_OR_STAKEHOLDER
         )
         actions_policymaker_or_stakeholder = (
-            ",".split(actions_policymaker_or_stakeholder_str)
+            [
+                self._get_action(action_str)
+                for action_str in ",".split(actions_policymaker_or_stakeholder_str)
+            ]
             if actions_policymaker_or_stakeholder_str
             else []
         )
 
         actions_public_str = self._get_response_value(FormField.ACTIONS_PUBLIC)
-        actions_public = ",".split(actions_public_str) if actions_public_str else []
-        return [
-            self._get_raw_action(form_action)
-            for form_action in (actions_policymaker_or_stakeholder or actions_public)
-        ]
+        actions_public = (
+            [
+                self._get_action(action_str)
+                for action_str in ",".split(actions_public_str)
+            ]
+            if actions_public_str
+            else []
+        )
+        actions = (
+            actions_policymaker_or_stakeholder or actions_public or [Action.UNKNOWN]
+        )
+        return [self._get_raw_action(action) for action in actions]
 
     def _get_response_value(self, field: FormField):
         return self.form_response[_FORMFIELD_TO_FORM_COLUMN[field]]
 
-    def _get_action_and_count(self, form_action: str) -> Tuple[Action, int]:
-        # TODO(mike): Implement
-        return (Action.ARTICLE_BY_REPORTER, 1)
+    def _get_action(self, form_action_value: str) -> Action:
+        # TODO(mike): Implement correctly.
+        return Action.ARTICLE_BY_REPORTER
+
+    def _get_action_count(self) -> int:
+        # TODO(mike): Implement correctly.
+        return 1
 
     def _get_source(self):
-        # TODO(mike): Implement.
-        action_source_value = self._get_response_value(FormField.ACTION_SOURCE)
-
-
+        # TODO(mike): Handle Anytime actions.
         return ActionSource.HOUR_OF_ACTION
 
-    def _get_audience(self):
-        # TODO(mike): Implement.
-        return Audience.PUBLIC
+    def _get_audience(self) -> Optional[Audience]:
+        # TODO(mike): Implement correctly.
+        audience_form_value = self._get_response_value(FormField.AUDIENCE)
+        # print(audience_form_value)
+        if audience_form_value in _AUDIENCE_FORM_VALUE_TO_AUDIENCE:
+            return _AUDIENCE_FORM_VALUE_TO_AUDIENCE[audience_form_value]
+        LOG.warning(
+            f"Audience form value not found, returning {Audience.OTHER}: "
+            f"{audience_form_value}"
+        )
+        return Audience.OTHER
 
-    def _get_raw_action(self, form_action: str) -> RawAction:
-        action, action_count = self._get_action_and_count(form_action)
+    def _get_raw_action(self, action: Action) -> RawAction:
         return RawAction(
             email=self._get_response_value(FormField.EMAIL),
             full_name=self._get_response_value(FormField.FULL_NAME),
@@ -163,7 +195,7 @@ class FormResponse:
             ).date(),
             action=action,
             intent=ActionIntent.ADVOCACY,
-            count=action_count,
+            count=self._get_action_count(),
             source=self._get_source(),
             audience=self._get_audience(),
             # TODO(mike): Fill this in.
@@ -172,7 +204,6 @@ class FormResponse:
         )
 
     def __str__(self):
-        import pprint
         return pprint.pformat(self.form_response)
 
     # TODO(mike): schema changes
@@ -181,18 +212,18 @@ class FormResponse:
 
 
 @click.command()
-@click.argument('form_responses_filename')
-@click.argument('output_filename')
+@click.argument("form_responses_filename")
+@click.argument("output_filename")
 def get_actions_from_form_responses(form_responses_filename, output_filename):
     with open(form_responses_filename, "r") as infile:
-        with open(output_filename, 'w') as outfile:
+        with open(output_filename, "w") as outfile:
             reader = csv.DictReader(infile)
             writer = csv.DictWriter(outfile, RawAction._fields)
             for record in reader:
                 form_response = FormResponse(record)
-                print(form_response)
+                # print(form_response)
                 for raw_action in form_response.as_raw_actions():
-                    print(raw_action)
+                    # print(raw_action)
                     writer.writerow(raw_action.to_csv_record())
 
 
