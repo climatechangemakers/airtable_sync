@@ -232,6 +232,14 @@ class FormResponse:
 @click.argument("form_responses_filename")
 @click.argument("output_filename")
 def get_actions_from_form_responses(form_responses_filename, output_filename):
+    """Generate a csv that can be COPYed into the ccm-db `actions_raw` table
+
+    FORM_RESPONSES_FILENAME is a csv downloaded from the advocacy tracking responses Google sheet
+    (https://docs.google.com/spreadsheets/d/10tGd0De-gqlMEkZuB9orwaHGIRy0zDl8vSCq5wEj1FI/edit#gid=1628979061)
+
+    To copy `output_filename` into ccm-db:\n
+    psql -h ccm-db.c51ekbqkhdej.us-west-2.rds.amazonaws.com -U ccm_readwrite -d postgres -c "\copy actions_raw FROM <output_filename> WITH (FORMAT csv, HEADER true)"
+    """
     with open(form_responses_filename, "r") as infile:
         with open(output_filename, "w") as outfile:
             reader = csv.DictReader(infile)
