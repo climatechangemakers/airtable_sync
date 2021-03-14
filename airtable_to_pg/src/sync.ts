@@ -1,8 +1,8 @@
-require('dotenv').config();
-import { getPostgresClient } from './pg';
-const airtable = require('airtable');
-// const moment = require('moment');
 import throat from 'throat';
+import { getPostgresClient } from './pg';
+// const moment = require('moment');
+require('dotenv').config();
+const airtable = require('airtable');
 // const _ = require('lodash');
 
 // process.env.SALESFORCE_SECURITY_TOKEN
@@ -12,42 +12,42 @@ const base = airtable.base(process.env.AIRTABLE_BASE);
 async function upsertRecord(record: any) {
   const pg = await getPostgresClient();
 
-  const { id: airtable_id } = record;
-  const first_name = record.get('First Name');
-  const last_name = record.get('Last Name');
+  const { id: airtableId } = record;
+  const firstName = record.get('First Name');
+  const lastName = record.get('Last Name');
   const email = record.get('Email');
-  const slack_member_id = record.get('Slack Member ID');
-  const slack_joined_date = record.get('Slack Joined Date')
+  const slackMemberId = record.get('Slack Member ID');
+  const slackJoinedDate = record.get('Slack Joined Date')
     ? new Date(record.get('Slack Joined Date'))
     : undefined;
-  const slack_last_active_date = record.get('Slack Last Active Date')
+  const slackLastActiveDate = record.get('Slack Last Active Date')
     ? new Date(record.get('Slack Last Active Date'))
     : undefined;
   const state = record.get('State');
-  const signup_date = record.get('Signup Date')
+  const signupDate = record.get('Signup Date')
     ? new Date(record.get('Signup Date'))
     : undefined;
-  const referred_by = record.get('Referred By');
-  const one_on_one_status = record.get('1:1 Status');
-  const one_on_one_greeter = record.get('1:1 Greeter');
-  const is_experienced = record.get('Experience?') === 'Yes';
-  const mailchimp_status = record.get('MailChimp Status?');
+  const referredBy = record.get('Referred By');
+  const onOnOneStatus = record.get('1:1 Status');
+  const onOnOneGreeter = record.get('1:1 Greeter');
+  const isExperienced = record.get('Experience?') === 'Yes';
+  const mailchimpStatus = record.get('MailChimp Status?');
 
   const input = [
     email,
-    airtable_id,
-    first_name,
-    last_name,
-    slack_member_id,
-    signup_date,
-    slack_joined_date,
-    slack_last_active_date,
+    airtableId,
+    firstName,
+    lastName,
+    slackMemberId,
+    signupDate,
+    slackJoinedDate,
+    slackLastActiveDate,
     state,
-    referred_by,
-    one_on_one_status,
-    one_on_one_greeter,
-    is_experienced,
-    mailchimp_status,
+    referredBy,
+    onOnOneStatus,
+    onOnOneGreeter,
+    isExperienced,
+    mailchimpStatus,
   ];
 
   const query = `
