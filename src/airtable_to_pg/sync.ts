@@ -31,6 +31,7 @@ async function upsertRecord(record: any) {
   const one_on_one_status = record.get('1:1 Status');
   const one_on_one_greeter = record.get('1:1 Greeter');
   const is_experienced = record.get('Experience?') === 'Yes';
+  const mailchimp_status = record.get('MailChimp Status?');
 
   const input = [
     email,
@@ -46,6 +47,7 @@ async function upsertRecord(record: any) {
     one_on_one_status,
     one_on_one_greeter,
     is_experienced,
+    mailchimp_status,
   ];
 
   const query = `
@@ -62,9 +64,10 @@ async function upsertRecord(record: any) {
     referred_by,
     one_on_one_status,
     one_on_one_greeter,
-    is_experienced
+    is_experienced,
+    mailchimp_status
   )
-  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
   ON CONFLICT (airtable_id)
   DO
   UPDATE SET
@@ -79,7 +82,8 @@ async function upsertRecord(record: any) {
     referred_by = EXCLUDED.referred_by,
     one_on_one_status = EXCLUDED.one_on_one_status,
     one_on_one_greeter = EXCLUDED.one_on_one_greeter,
-    is_experienced = EXCLUDED.is_experienced
+    is_experienced = EXCLUDED.is_experienced,
+    mailchimp_status = EXCLUDED.mailchimp_status
   ;`;
 
   await pg.query(query, input);
