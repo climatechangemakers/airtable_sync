@@ -10,6 +10,7 @@ module.exports = {
   plugins: ['@typescript-eslint', 'prettier'],
   extends: [
     'airbnb-typescript/base',
+    // 'plugin:@typescript-eslint/recommended',
     'plugin:prettier/recommended'
   ],
   rules: {
@@ -24,8 +25,6 @@ module.exports = {
         'consistent-return': 'warn',
         '@typescript-eslint/no-var-requires': 'off', // I don't think this one should apply to .js files
         '@typescript-eslint/explicit-function-return-type': 'off', // this one doesn't apply to .js files
-        '@typescript-eslint/camelcase': 'off', // should be refactored, but will take some time
-        '@typescript-eslint/naming-convention': 'off', // should be refactored, but will take some time
       },
     },
     {

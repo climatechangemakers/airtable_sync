@@ -20,14 +20,6 @@ module.exports = {
   },
   overrides: [
     {
-      files: ['*.js'],
-      rules: {
-        'consistent-return': 'warn',
-        '@typescript-eslint/no-var-requires': 'off', // I don't think this one should apply to .js files
-        '@typescript-eslint/explicit-function-return-type': 'off', // this one doesn't apply to .js files
-      },
-    },
-    {
       files: ['test/**/*.{js,ts}'],
       rules: {
         'no-undef': 'off',

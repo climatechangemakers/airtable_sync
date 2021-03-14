@@ -1,8 +1,8 @@
 {
-  "name": "@climatechangemakers/salesforce",
-  "description": "Sync engagement data to salesforce",
+  "name": "@climatechangemakers/pg_to_airtable",
+  "description": "Sync engagement data from pg back to Airtable",
   "main": "./index.js",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "engines": {
     "node": "14.4.0",
@@ -73,13 +73,5 @@
     "source-map-support": "0.5.19",
     "ts-node": "9.0.0",
     "typescript": "4.1.2"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged"
-    }
-  },
-  "lint-staged": {
-    "*.{ts,js}": "prettier --write"
   }
 }
