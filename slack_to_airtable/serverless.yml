@@ -11,13 +11,9 @@ provider:
 # plugins:
 #   - serverless-plugin-typescript
 
-# package:
-#   exclude:
-#     - node_modules/puppeteer/.local-chromium/**
-
 functions:
   sync:
-    handler: sync.handler
+    handler: src/sync.handler
     environment:
       SLACK_TOKEN: ${ssm:/ccm/slack/token~true}
       AIRTABLE_API_KEY: ${ssm:/ccm/airtable/api_key~true}

@@ -1,12 +1,12 @@
 {
-  "name": "@climatechangemakers/slack",
-  "description": "Sync engagement data to salesforce",
+  "name": "@climatechangemakers/pg_to_airtable",
+  "description": "Sync engagement data from pg back to Airtable",
   "main": "./index.js",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "engines": {
-    "node": "12.16.1",
-    "npm": "6.13.4"
+    "node": "14.4.0",
+    "npm": "7.6.3"
   },
   "scripts": {
     "dev": "nodemon",
@@ -43,17 +43,19 @@
     "all": true
   },
   "dependencies": {
-    "@slack/web-api": "^5.13.0",
     "airtable": "0.10.1",
     "axios": "0.21.0",
-    "dotenv": "^8.2.0",
+    "dotenv": "8.2.0",
+    "jsforce": "1.10.1",
     "lodash": "4.17.20",
     "moment": "2.29.1",
-    "throat": "^5.0.0"
+    "pg": "8.5.1",
+    "throat": "5.0.0"
   },
   "devDependencies": {
     "@types/moment": "2.13.0",
     "@types/node": "14.14.9",
+    "@types/pg": "7.14.9",
     "@typescript-eslint/eslint-plugin": "4.8.2",
     "@typescript-eslint/parser": "4.8.2",
     "eslint": "7.14.0",
@@ -71,13 +73,5 @@
     "source-map-support": "0.5.19",
     "ts-node": "9.0.0",
     "typescript": "4.1.2"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged"
-    }
-  },
-  "lint-staged": {
-    "*.{ts,js}": "prettier --write"
   }
 }

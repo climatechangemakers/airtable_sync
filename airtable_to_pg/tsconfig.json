@@ -1,14 +1,15 @@
 {
   "compilerOptions": {
     "allowJs": true,
-    "declaration": true,
     "outDir": "./dist/",
     "sourceMap": true,
     "noImplicitAny": true,
     "module": "commonjs",
-    "lib": ["es6"],
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "lib": ["es6", "esnext"],
     "target": "es6"
   },
-  "include": ["./test/"],
-  "exclude": ["node_modules", "dist"]
+  "include": ["src"],
+  "exclude": ["node_modules", "dist", ".build"]
 }
