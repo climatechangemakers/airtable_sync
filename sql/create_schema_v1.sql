@@ -2,7 +2,7 @@ CREATE TYPE action_source AS ENUM ('HOUR_OF_ACTION', 'ANYTIME_ACTION');
 CREATE TYPE action_intent AS ENUM ('ADVOCACY', 'ELECTORAL');
 CREATE TYPE action AS ENUM (
   'PHONE_CALLS',
-  'CONSTITUENT_LETTERS',
+  'CONSTITUENT_CONTACT',
   'PERSONAL_MEETING',
   'SOCIAL_MEDIA_CONTACT',
   'TOWN_HALL',
@@ -15,13 +15,15 @@ CREATE TYPE action AS ENUM (
   'TV_BROADCAST',
   'LETTER_TO_THE_EDITOR',
   'OP_ED',
-  'EDITORIAL'
+  'EDITORIAL',
+  'PERSONALIZED_TALKING_POINTS',
+  'OTHER'
 );
 CREATE TYPE audience AS ENUM (
-  'PERSONAL_NETWORK',
   'POLICYMAKER',
   'STAKEHOLDER',
-  'PUBLIC'
+  'PUBLIC',
+  'OTHER'
 );
 CREATE TYPE hoa_event_type as ENUM (
   'ADV_PERSONALIZE_TALKING_POINTS_AND_PERSONAL_NETWORK_OUTREACH',
@@ -37,12 +39,13 @@ CREATE TABLE IF NOT EXISTS actions_raw (
   date DATE NOT NULL,
   action action NOT NULL,
   intent action_intent NOT NULL,
-  count INTEGER NOT NULL CHECK (count > 0),
+  count INTEGER CONSTRAINT positive_count CHECK (count > 0),
   source action_source NOT NULL,
   audience audience,
   other_form_inputs JSONB,
   form_response_id VARCHAR(256)
 );
+COMMENT ON COLUMN actions_raw.count is 'Update the advocacy response form to allow only positive counts'
 
 CREATE TABLE IF NOT EXISTS hoa_events (
   id SERIAL PRIMARY KEY,
