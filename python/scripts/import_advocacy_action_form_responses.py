@@ -128,7 +128,7 @@ _ACTION_FORM_VALUE_TO_ACTION = {
     "Personal meeting": Action.PERSONAL_MEETING,
     "Social media interactions (contact via Twitter or Facebook or other social media platform)": Action.SOCIAL_MEDIA_CONTACT,
     "Town hall": Action.TOWN_HALL,
-    "Lobby meeting": Action.LOBBY_MEETING,
+    '"Lobby" meeting': Action.LOBBY_MEETING,
     "Personal text/call/message -- to someone in your personal network": Action.RELATIONAL_ORGANIZING_PERSONAL_MESSAGE,
     "Social media post -- wrote and shared to your network": Action.RELATIONAL_ORGANIZING_SOCIAL_MEDIA,
     "Blog post (e.g. Medium, LinkedIn) -- wrote and shared to your network": Action.BLOG_POST,
@@ -179,13 +179,13 @@ class FormResponse:
         if action is not None:
             return action
         LOG.warning(
-            "Action form value not found, returning {Action.OTHER}: "
-            f"{form_action_value}"
+            f'Action form value: "{form_action_value}" not found, returning'
+            f"{Action.OTHER}. Full record: {self}"
         )
         return Action.OTHER
 
-    def _get_action_count(self, action: Action) -> Optional[int]:
-        if self._get_audience() not in {Audience.POLICYMAKER, Audience.STAKEHOLDER}:
+    def _get_action_count(self, action: Action, audience: Audience) -> Optional[int]:
+        if audience not in {Audience.POLICYMAKER, Audience.STAKEHOLDER}:
             return None
         if action == Action.PHONE_CALLS:
             return int(self._get_response_value(FormField.PHONE_CALL_COUNT))
@@ -197,17 +197,18 @@ class FormResponse:
         # TODO(mike): Handle Anytime actions.
         return ActionSource.HOUR_OF_ACTION
 
-    def _get_audience(self) -> Optional[Audience]:
+    def _get_audience(self) -> Audience:
         audience_form_value = self._get_response_value(FormField.AUDIENCE)
         if audience_form_value in _AUDIENCE_FORM_VALUE_TO_AUDIENCE:
             return _AUDIENCE_FORM_VALUE_TO_AUDIENCE[audience_form_value]
         LOG.warning(
-            f"Audience form value not found, returning {Audience.OTHER}: "
-            f"{audience_form_value}"
+            f'Audience form value: "{audience_form_value}" not found, '
+            f"returning {Audience.OTHER}. Full record: {self}"
         )
         return Audience.OTHER
 
     def _get_raw_action(self, action: Action) -> RawAction:
+        audience = self._get_audience()
         return RawAction(
             email=self._get_response_value(FormField.EMAIL),
             full_name=self._get_response_value(FormField.FULL_NAME),
@@ -216,9 +217,9 @@ class FormResponse:
             ).date(),
             action=action,
             intent=ActionIntent.ADVOCACY,
-            count=self._get_action_count(action),
+            count=self._get_action_count(action, audience),
             source=self._get_source(),
-            audience=self._get_audience(),
+            audience=audience,
             # TODO(mike): Fill this in.
             other_form_inputs={},
             form_response_id=self.form_response_id,
