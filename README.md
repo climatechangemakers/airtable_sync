@@ -18,6 +18,8 @@ readonly user: ccm_readonly
 (reference for the permission scheme: https://aws.amazon.com/blogs/database/managing-postgresql-users-and-roles/)
 
 Connect to the database using psql:
+```bash
 psql -h ccm-db.c51ekbqkhdej.us-west-2.rds.amazonaws.com -d postgres -U ccm_readwrite -W
+```
 
 To obtain the password, check the Parameter Store in AWS Systems Manager.
