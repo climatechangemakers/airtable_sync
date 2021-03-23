@@ -1,0 +1,24 @@
+org: paulcothenet
+app: climatechangemakers
+service: mailchimp-to-airtable
+
+provider:
+  name: aws
+  profile: perso
+  region: us-west-2
+  runtime: nodejs12.x
+
+plugins:
+  - serverless-plugin-typescript
+
+functions:
+  sync:
+    handler: src/sync.handler
+    environment:
+      AIRTABLE_API_KEY: ${ssm:/ccm/airtable/api_key~true}
+      AIRTABLE_BASE: ${ssm:/ccm/airtable/base~true}
+      MAILCHIMP_API_KEY: ${ssm:/ccm/mailchimp/api_key~true}
+    memorySize: 256
+    timeout: 60
+    events:
+      - schedule: rate(2 hours)
