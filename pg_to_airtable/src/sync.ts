@@ -9,12 +9,12 @@ const base = airtable.base(process.env.AIRTABLE_BASE);
 const DEFAULT_SEGMENT = '0 - Inactive (0 in past 2 months)';
 
 // map the SQL values to the Airtable values
-const SEGMENT_MAPPING: { [key: string]: string } = {
-  regular: '3 - Regular (2 in past 1 month)',
-  inconsistent: '2 - Inconsistent (1 in past 1 month)',
-  inactive: DEFAULT_SEGMENT,
-  dormant: '1 - Dormant (0 in past 1 month, but 1+ in prev. month)',
-  super: '4 - Super (3-4 in past 1 month)',
+const SEGMENT_MAPPING: { [key: number]: string } = {
+  3: '3 - Regular (2 in past 1 month)',
+  2: '2 - Inconsistent (1 in past 1 month)',
+  0: DEFAULT_SEGMENT,
+  1: '1 - Dormant (0 in past 1 month, but 1+ in prev. month)',
+  4: '4 - Super (3-4 in past 1 month)',
 };
 
 async function getSegment(airtable_id: string) {
