@@ -10,6 +10,7 @@ provider:
 
 plugins:
   - serverless-plugin-typescript
+
 functions:
   sync:
     handler: src/sync.handler
