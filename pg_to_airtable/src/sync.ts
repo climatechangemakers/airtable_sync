@@ -9,18 +9,19 @@ const base = airtable.base(process.env.AIRTABLE_BASE);
 const DEFAULT_SEGMENT = '0 - Inactive (0 in past 2 months)';
 
 // map the SQL values to the Airtable values
-const SEGMENT_MAPPING: { [key: string]: string } = {
-  regular: '3 - Regular (2 in past 1 month)',
-  inconsistent: '2 - Inconsistent (1 in past 1 month)',
-  inactive: DEFAULT_SEGMENT,
-  dormant: '1 - Dormant (0 in past 1 month, but 1+ in prev. month)',
-  super: '4 - Super (3-4 in past 1 month)',
+const SEGMENT_MAPPING: { [key: number]: string } = {
+  3: '3 - Regular (2 in past 1 month)',
+  2: '2 - Inconsistent (1 in past 1 month)',
+  0: DEFAULT_SEGMENT,
+  1: '1 - Dormant (0 in past 1 month, but 1+ in prev. month)',
+  4: '4 - Super (3-4 in past 1 month)',
 };
 
 async function getSegment(airtable_id: string) {
   const pg = await getPostgresClient();
   const query = `SELECT segment FROM analysis.hoa_segments WHERE airtable_id = $1;`;
   const { rows } = await pg.query(query, [airtable_id]);
+  if (!rows.length) return;
   const { segment: rawSegment } = rows[0];
   const segment = SEGMENT_MAPPING[rawSegment] || DEFAULT_SEGMENT;
   return segment;
@@ -32,6 +33,8 @@ async function updateSegment(record: any) {
   if (!segment) {
     return;
   }
+  const existingSegment = record.get('HoA Active Segment');
+  if (segment == existingSegment) return;
   // update the record in Airtable
   try {
     await record.updateFields({
