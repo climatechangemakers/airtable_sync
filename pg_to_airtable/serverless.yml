@@ -1,6 +1,6 @@
 org: paulcothenet
 app: climatechangemakers
-service: airtable-to-pg
+service: pg-to-airtable
 
 provider:
   name: aws
