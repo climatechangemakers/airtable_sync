@@ -23,6 +23,6 @@ functions:
       PGPORT: 5432
       PGDATABASE: postgres
     memorySize: 256
-    timeout: 60
+    timeout: 120
     events:
       - schedule: rate(24 hours)
