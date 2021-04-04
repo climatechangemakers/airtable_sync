@@ -13,7 +13,7 @@ plugins:
 
 functions:
   sync:
-    handler: sync.handler
+    handler: src/sync.handler
     environment:
       AIRTABLE_API_KEY: ${ssm:/ccm/airtable/api_key~true}
       AIRTABLE_BASE: ${ssm:/ccm/airtable/base~true}
