@@ -25,4 +25,4 @@ functions:
     memorySize: 256
     timeout: 60
     events:
-      - schedule: rate(2 hours)
+      - schedule: rate(24 hours)

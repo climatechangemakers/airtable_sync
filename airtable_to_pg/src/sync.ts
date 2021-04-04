@@ -5,8 +5,6 @@ require('dotenv').config();
 const airtable = require('airtable');
 // const _ = require('lodash');
 
-// process.env.SALESFORCE_SECURITY_TOKEN
-
 const base = airtable.base(process.env.AIRTABLE_BASE);
 
 async function upsertRecord(record: any) {

@@ -21,6 +21,7 @@ async function getSegment(airtable_id: string) {
   const pg = await getPostgresClient();
   const query = `SELECT segment FROM analysis.hoa_segments WHERE airtable_id = $1;`;
   const { rows } = await pg.query(query, [airtable_id]);
+  if (!rows.length) return;
   const { segment: rawSegment } = rows[0];
   const segment = SEGMENT_MAPPING[rawSegment] || DEFAULT_SEGMENT;
   return segment;
@@ -32,6 +33,8 @@ async function updateSegment(record: any) {
   if (!segment) {
     return;
   }
+  const existingSegment = record.get('HoA Active Segment');
+  if (segment == existingSegment) return;
   // update the record in Airtable
   try {
     await record.updateFields({
