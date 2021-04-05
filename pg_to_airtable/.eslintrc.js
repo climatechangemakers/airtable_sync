@@ -11,22 +11,15 @@ module.exports = {
   extends: [
     'airbnb-typescript/base',
     // 'plugin:@typescript-eslint/recommended',
-    'plugin:prettier/recommended'
+    'plugin:prettier/recommended',
   ],
   rules: {
     'prettier/prettier': 'error',
     'no-console': 'off',
-    'import/prefer-default-export': 'off'
+    'import/prefer-default-export': 'off',
+    '@typescript-eslint/comma-dangle': 'warn',
   },
   overrides: [
-    {
-      files: ['*.js'],
-      rules: {
-        'consistent-return': 'warn',
-        '@typescript-eslint/no-var-requires': 'off', // I don't think this one should apply to .js files
-        '@typescript-eslint/explicit-function-return-type': 'off', // this one doesn't apply to .js files
-      },
-    },
     {
       files: ['test/**/*.{js,ts}'],
       rules: {

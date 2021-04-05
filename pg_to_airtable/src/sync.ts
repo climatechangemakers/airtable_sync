@@ -1,8 +1,9 @@
-require('dotenv').config();
-import { getPostgresClient } from './pg';
-const airtable = require('airtable');
 import throat from 'throat';
 import * as moment from 'moment';
+import { getPostgresClient } from './pg';
+
+require('dotenv').config();
+const airtable = require('airtable');
 
 const base = airtable.base(process.env.AIRTABLE_BASE);
 
@@ -17,31 +18,32 @@ const SEGMENT_MAPPING: { [key: number]: string } = {
   4: '4 - Super (3-4 in past 1 month)',
 };
 
-async function getSegment(airtable_id: string) {
+async function getSegment(airtableId: string): Promise<string> {
   const pg = await getPostgresClient();
-  const query = `SELECT segment FROM analysis.hoa_segments WHERE airtable_id = $1;`;
-  const { rows } = await pg.query(query, [airtable_id]);
-  if (!rows.length) return;
+  const query =
+    'SELECT segment FROM analysis.hoa_segments WHERE airtable_id = $1;';
+  const { rows } = await pg.query(query, [airtableId]);
+  if (!rows.length) return '';
   const { segment: rawSegment } = rows[0];
   const segment = SEGMENT_MAPPING[rawSegment] || DEFAULT_SEGMENT;
   return segment;
 }
 
 async function updateSegment(record: any) {
-  const { id: airtable_id } = record;
-  const segment = await getSegment(airtable_id);
+  const { id: airtableId } = record;
+  const segment = await getSegment(airtableId);
   if (!segment) {
     return;
   }
   const existingSegment = record.get('HoA Active Segment');
-  if (segment == existingSegment) return;
+  if (segment === existingSegment) return;
   // update the record in Airtable
   try {
     await record.updateFields({
       'HoA Active Segment': segment,
       'Last updated by Bot': moment().format('YYYY-MM-DD'),
     });
-    console.log(`updated record ${airtable_id}`);
+    console.log(`updated record ${airtableId}`);
   } catch (err) {
     console.log(err);
   }
