@@ -1,5 +1,5 @@
-org: paulcothenet
-app: climatechangemakers
+org: climatechangemakers
+app: airtable-sync
 service: slack-to-airtable
 
 provider:
