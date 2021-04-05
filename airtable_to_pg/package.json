@@ -11,7 +11,7 @@
   "scripts": {
     "dev": "nodemon",
     "pretest": "shx rm -rf ./coverage ./.nyc_output",
-    "test": "npm run lint && npm run mocha",
+    "test": "npm run lint",
     "mocha": "nyc mocha './test/**/*.spec.ts' './test/**/*.spec.js'",
     "lint": "tsc --noEmit && eslint 'src/**/*.{js,ts,tsx}' --quiet --fix"
   },
