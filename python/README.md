@@ -10,4 +10,8 @@ pyenv virtualenv ccm_airtable_sync
 ```
 pyenv activate ccm_airtable_sync
 ```
-4. Run your Python code!
+4. Install dependencies
+```
+pip install -r python/requirements.txt
+```
+5. Run your Python code!
