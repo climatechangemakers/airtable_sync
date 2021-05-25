@@ -111,7 +111,7 @@ _FORMFIELD_TO_FORM_COLUMN = {
     FormField.CONSTITUENT_CONTACT_COUNT: 'If you selected "Personal letters/emails or constituent comments or postcards," how many did you write?',
     FormField.ACTIONS_PUBLIC: "What action(s) did you take?",
     FormField.MEDIA_DESCRIPTION: "Can you provide links (preferred) or short descriptions of the media piece(s) checked above?",
-    FormField.EMAIL: "Email Address",
+    FormField.EMAIL: "Email",
     FormField.ACTION_SOURCE: "Source of action",
 }
 
@@ -169,7 +169,8 @@ class FormResponse:
             else []
         )
         actions = actions_policymaker_or_stakeholder or actions_public or [Action.OTHER]
-        return [self._get_raw_action(action) for action in actions]
+        raw_actions = [self._get_raw_action(action) for action in actions]
+        return [ra for ra in raw_actions if ra is not None]
 
     def _get_response_value(self, field: FormField):
         return self.form_response[_FORMFIELD_TO_FORM_COLUMN[field]]
@@ -207,8 +208,15 @@ class FormResponse:
         )
         return Audience.OTHER
 
-    def _get_raw_action(self, action: Action) -> RawAction:
+    def _get_raw_action(self, action: Action) -> Optional[RawAction]:
         audience = self._get_audience()
+        action_count = self._get_action_count(action, audience)
+        if action_count == 0:
+            LOG.warning(
+                f"Found explicit zero action count, skipping record. "
+                f"Full record: {self}"
+            )
+            return None
         return RawAction(
             email=self._get_response_value(FormField.EMAIL),
             full_name=self._get_response_value(FormField.FULL_NAME),
@@ -217,7 +225,7 @@ class FormResponse:
             ).date(),
             action=action,
             intent=ActionIntent.ADVOCACY,
-            count=self._get_action_count(action, audience),
+            count=action_count,
             source=self._get_source(),
             audience=audience,
             # TODO(mike): Fill this in.
