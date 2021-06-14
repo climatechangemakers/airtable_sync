@@ -111,12 +111,12 @@ _FORMFIELD_TO_FORM_COLUMN = {
     FormField.CONSTITUENT_CONTACT_COUNT: 'If you selected "Personal letters/emails or constituent comments or postcards," how many did you write?',
     FormField.ACTIONS_PUBLIC: "What action(s) did you take?",
     FormField.MEDIA_DESCRIPTION: "Can you provide links (preferred) or short descriptions of the media piece(s) checked above?",
-    FormField.EMAIL: "Email",
+    FormField.EMAIL: "Email Address",
     FormField.ACTION_SOURCE: "Source of action",
 }
 
 _AUDIENCE_FORM_VALUE_TO_AUDIENCE = {
-    "Policymaker (e.g. congressperson, local public official, etc.)": Audience.POLICYMAKER,
+    "Policymaker (elected or appointed public officials)": Audience.POLICYMAKER,
     "Public (personal network e.g. friends, family, coworkers, etc.; or the broader public via blog post, media, etc.)": Audience.PUBLIC,
     "Stakeholder (e.g. nonprofit, company, organization, etc.)": Audience.STAKEHOLDER,
     "No outreach yet, but I'm ready to start a climate conversation with my friends, family, and/or followers using my personalized talking points": None,
