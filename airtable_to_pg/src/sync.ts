@@ -29,7 +29,7 @@ async function upsertRecord(record: any) {
   const onOnOneStatus = record.get('1:1 Status');
   const onOnOneGreeter = record.get('1:1 Greeter');
   const isExperienced = record.get('Experience?') === 'Yes';
-  const mailchimpStatus = record.get('MailChimp Status?');
+  const mailchimpStatus = record.get('MailChimp Status');
 
   const input = [
     email,
