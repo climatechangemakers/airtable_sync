@@ -80,3 +80,21 @@ CREATE TABLE IF NOT EXISTS contacts (
 );
 CREATE UNIQUE INDEX idx_airtable_id ON contacts (airtable_id);
 ALTER TABLE contacts ADD CONSTRAINT unique_airtable_id UNIQUE USING INDEX idx_airtable_id;
+
+
+CREATE TABLE IF NOT EXISTS hoa_attendance_zoom_with_action (
+    date date NOT NULL,
+    email CITEXT NOT NULL,
+    first_name character varying NOT NULL,
+    last_name character varying NOT NULL,
+    city character varying NOT NULL,
+    zip_code character varying NOT NULL,
+    state character varying NOT NULL,
+    action character varying NOT NULL,
+    CONSTRAINT hoa_attendance_zoom_with_action_pkey PRIMARY KEY (date, email)
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS hoa_attendance_zoom_with_action_pkey ON hoa_attendance_zoom_with_action(date date_ops,email text_ops);
+CREATE INDEX IF NOT EXISTS ix_hoa_attendance_zoom_with_action_action ON hoa_attendance_zoom_with_action(action text_ops);
+CREATE INDEX IF NOT EXISTS ix_hoa_attendance_zoom_with_action_date ON hoa_attendance_zoom_with_action(date date_ops);
+CREATE INDEX IF NOT EXISTS ix_hoa_attendance_zoom_with_action_email ON hoa_attendance_zoom_with_action(email text_ops);
