@@ -88,9 +88,11 @@ async function updateAirtable(slackUsers) {
 
 exports.handler = async function (_event, context) {
   try {
+    console.log('fetching Slack users');
     const slackUsers = await getSlackUsers();
-    // console.log(slackUsers);
+    console.log(`${slackUsers.length} Slack users found`);
     await updateAirtable(slackUsers);
+    console.log('Airtable updated');
   } catch (err) {
     console.log(err);
   }
