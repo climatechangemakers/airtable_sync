@@ -6,7 +6,7 @@ provider:
   name: aws
   profile: perso
   region: us-west-2
-  runtime: nodejs12.x
+  runtime: nodejs16.x
 
 functions:
   sync:
