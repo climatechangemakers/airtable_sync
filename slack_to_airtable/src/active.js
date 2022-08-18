@@ -10,7 +10,7 @@ const base = require('airtable').base(process.env.AIRTABLE_BASE);
 
 async function updateAirtable() {
   return new Promise((resolve, reject) => {
-    console.log(process.env.AIRTABLE_BASE);
+    console.log(`looking at base: ${process.env.AIRTABLE_BASE}`);
     base('CRM')
       .select({
         // maxRecords: 3,
@@ -35,12 +35,12 @@ async function updateAirtable() {
                   const { presence } = await slack.users.getPresence({
                     user: memberId,
                   });
-                  // console.log(memberId, lastActiveDate.toDate(), presence);
                   if (presence === 'active') {
                     await record.updateFields({
                       'Slack Last Active Date': moment().format('YYYY-MM-DD'),
                       'Last updated by Bot': moment().format('YYYY-MM-DD'),
                     });
+                    console.log(`updated record for: ${memberId}`, presence);
                   }
                   await new Promise((resolve) => setTimeout(resolve, 300)); // wait a bit for rate limit
                 }

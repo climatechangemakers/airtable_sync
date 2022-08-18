@@ -55,7 +55,7 @@ async function updateAirtable(slackUsers) {
                   );
                 });
                 if (slackMatch && !slackJoinedDate) {
-                  console.log(email, slackJoinedDate, slackMatch);
+                  // console.log(email, slackJoinedDate, slackMatch);
                   try {
                     await record.updateFields({
                       'Slack Joined Date': slackMatch.updatedDate,

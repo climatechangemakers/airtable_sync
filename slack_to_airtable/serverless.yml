@@ -20,7 +20,7 @@ functions:
     events:
       - schedule: rate(2 hours)
   active:
-    handler: active.handler
+    handler: src/active.handler
     environment:
       SLACK_TOKEN: ${ssm:/ccm/slack/token}
       AIRTABLE_API_KEY: ${ssm:/ccm/airtable/api_key}
@@ -29,13 +29,13 @@ functions:
     timeout: 600
     events:
       - schedule: rate(25 minutes)
-  channels:
-    handler: channels.handler
-    environment:
-      SLACK_TOKEN: ${ssm:/ccm/slack/token}
-      AIRTABLE_API_KEY: ${ssm:/ccm/airtable/api_key}
-      AIRTABLE_BASE: ${ssm:/ccm/airtable/base}
-    memorySize: 256
-    timeout: 360
-    events:
-      - schedule: rate(4 hours)
+  # channels:
+  #   handler: channels.handler
+  #   environment:
+  #     SLACK_TOKEN: ${ssm:/ccm/slack/token}
+  #     AIRTABLE_API_KEY: ${ssm:/ccm/airtable/api_key}
+  #     AIRTABLE_BASE: ${ssm:/ccm/airtable/base}
+  #   memorySize: 256
+  #   timeout: 360
+  #   events:
+  #     - schedule: rate(4 hours)
