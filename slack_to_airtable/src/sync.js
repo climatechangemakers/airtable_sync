@@ -24,10 +24,11 @@ function parseUserResponse(members) {
 }
 
 async function updateAirtable(slackUsers) {
+  console.log(`looking at base: ${process.env.AIRTABLE_BASE}`);
   return new Promise((resolve, reject) => {
     base('CRM')
       .select({
-        // maxRecords: 100,
+        // maxRecords: 10,
         view: 'Grid view',
       })
       .eachPage(
@@ -42,7 +43,6 @@ async function updateAirtable(slackUsers) {
                   'Last Name'
                 )}`;
                 const slackJoinedDate = record.get('Slack Joined Date');
-                // console.log(email,name)
                 const slackMatch = slackUsers.find((slackUser) => {
                   if (!slackUser.email) {
                     return;
@@ -63,6 +63,7 @@ async function updateAirtable(slackUsers) {
                       Slack: 'Joined',
                       'Last updated by Bot': moment().format('YYYY-MM-DD'),
                     });
+                    console.log(`updated record for: ${email}`);
                   } catch (err) {
                     console.log(err);
                   }
