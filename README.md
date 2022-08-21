@@ -27,6 +27,11 @@ sls deploy
 ```
 (` --aws-profile ccm` if you use a different profile)
 
+
+## Secrets
+
+Secrets (password, etc...) are stored in the [Parameter Store of AWS Systems Manager](https://us-west-2.console.aws.amazon.com/systems-manager/parameters). They are then passed on by serverless to the function as env variables. See the [Serverless docs](https://www.serverless.com/framework/docs/providers/aws/guide/variables/#reference-variables-using-the-ssm-parameter-store) for more.
+
 ## Sync Airtable and Slack
 
 ### Functions
