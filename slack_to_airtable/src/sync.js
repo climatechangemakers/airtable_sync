@@ -8,17 +8,23 @@ const slack = new WebClient(process.env.SLACK_TOKEN);
 
 const base = require('airtable').base(process.env.AIRTABLE_BASE);
 
-async function getSlackUsers() {
-  const { members } = await slack.users.list();
-  return parseUserResponse(members);
-}
-
 function parseUserResponse(members) {
   const shortList = members.map((member) => {
-    const { id, profile, name, updated, is_bot } = member;
+    const { id, profile, name, updated, is_bot, deleted } = member;
+    if (is_bot) {
+      return;
+    }
     const { email, display_name, real_name } = profile;
     const updatedDate = moment.unix(updated).format('YYYY-MM-DD');
-    return !is_bot && { id, email, name, real_name, display_name, updatedDate };
+    return {
+      id,
+      deleted,
+      email,
+      name,
+      real_name,
+      display_name,
+      updatedDate,
+    };
   });
   return _.compact(shortList);
 }
@@ -37,30 +43,30 @@ async function updateAirtable(slackUsers) {
           await Promise.all(
             records.map(
               throat(1, async (record) => {
-                // console.log(record);
-                const email = record.get('Email');
-                const name = `${record.get('First Name')} ${record.get(
-                  'Last Name'
-                )}`;
+                const email = record.get('Email').toLowerCase().trim();
+                const emails = [email];
+                emails.concat(record.get('Secondary Email') || []);
+
+                const firstName = record.get('First Name');
+                const lastName = record.get('Last Name');
+                const name = `${firstName} ${lastName}`.toLowerCase();
                 const slackJoinedDate = record.get('Slack Joined Date');
                 const slackMatch = slackUsers.find((slackUser) => {
                   if (!slackUser.email) {
                     return;
                   }
-                  return (
-                    slackUser.email.toLowerCase() ===
-                      email.toLowerCase().trim() ||
-                    (slackUser.real_name &&
-                      slackUser.real_name.toLowerCase()) === name.toLowerCase()
-                  );
+                  slackEmail = slackUser.email.toLowerCase();
+                  slackName =
+                    slackUser.real_name && slackUser.real_name.toLowerCase();
+                  return emails.includes(slackEmail) || slackName === name;
                 });
+                // console.log(email, slackJoinedDate, slackMatch);
                 if (slackMatch && !slackJoinedDate) {
-                  // console.log(email, slackJoinedDate, slackMatch);
                   try {
                     await record.updateFields({
                       'Slack Joined Date': slackMatch.updatedDate,
                       'Slack Member ID': slackMatch.id,
-                      Slack: 'Joined',
+                      Slack: 'Joined Slack',
                       'Last updated by Bot': moment().format('YYYY-MM-DD'),
                     });
                     console.log(`updated record for: ${email}`);
@@ -87,11 +93,28 @@ async function updateAirtable(slackUsers) {
   });
 }
 
+async function getSlackUsers() {
+  const allSlackUsers = [];
+  let keep_going = true;
+  let cursor = undefined;
+  while (keep_going) {
+    const { response_metadata, members } = await slack.users.list({ cursor });
+    const { next_cursor } = response_metadata;
+    console.log(`records: ${members.length}`, `next_cursor: ${next_cursor}`);
+    const slackUsers = parseUserResponse(members);
+    allSlackUsers.push(...slackUsers);
+    keep_going = !!next_cursor;
+    cursor = next_cursor;
+  }
+  return allSlackUsers;
+}
+
 exports.handler = async function (_event, context) {
   try {
     console.log('fetching Slack users');
     const slackUsers = await getSlackUsers();
-    console.log(`${slackUsers.length} Slack users found`);
+    console.log(`Found ${slackUsers.length} Slack users`);
+    console.log('updating Airtable');
     await updateAirtable(slackUsers);
     console.log('Airtable updated');
   } catch (err) {

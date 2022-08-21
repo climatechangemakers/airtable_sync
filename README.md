@@ -29,9 +29,13 @@ sls deploy
 
 ## Sync Airtable and Slack
 
+### Functions
+
 - `sync`: checks if a given user in Airtable is a member of the Slack group
 - `active`: updates the "Slack Last Active Date" column in Airtable
-- `channels`: not currently in use. Used to sync what channels users belonged to
+- `backup`: can be used manually to download a copy of Airtable has a JSON file (useful before making big changes)
+- `channels`: [not currently in use]. Used to sync what channels users belonged to
+- `attendance`: [not currently in use]. Was used to manually sync HoA attendance files to Airtable
 
 ## PostgreSQL database
 
