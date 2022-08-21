@@ -1,14 +1,37 @@
-# climatechangemakers
+# airtable_sync
+
+This repository contains a couple functions used to synchronize data between systems (notably Slack and Airtable).
+
+Most of them runs 
+
+# Usage
+
+The functions are deployed to AWS Lambda and execute automatically at interval.
+
+The functions use the [Serverless framework](https://www.serverless.com/) to facilitate the deployment to AWS lambda.
 
 ## Executing the lambdas locally
 
 ```
+cd slack_to_airtable
 sls invoke local -f sync
 ```
 
 If you use a different AWS profile than the default, add `--aws-profile ccm`
 
+## Deploying a new version
+
+If you have local changes that you wish to deploy:
+```
+sls deploy
+```
+(` --aws-profile ccm` if you use a different profile)
+
 ## Sync Airtable and Slack
+
+- `sync`: checks if a given user in Airtable is a member of the Slack group
+- `active`: updates the "Slack Last Active Date" column in Airtable
+- `channels`: not currently in use. Used to sync what channels users belonged to
 
 ## PostgreSQL database
 
