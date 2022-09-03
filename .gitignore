@@ -43,8 +43,6 @@ Thumbs.db
 ################
 node_modules/
 **/node_modules/
-**/.serverless
-**/.build
 
 # Code coverage #
 ###################
@@ -65,3 +63,9 @@ tmp/
 backups
 data
 **/*.code-workspace
+
+# Serverless
+**/.serverless
+serverless_sdk
+**/.build
+s_*
