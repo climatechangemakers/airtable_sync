@@ -14,7 +14,7 @@ async function updateAirtable() {
     base('CRM')
       .select({
         // maxRecords: 3,
-        view: 'Joined Slack',
+        view: "DON'T RENAME - Joined Slack",
       })
       .eachPage(
         async function page(records, fetchNextPage) {
