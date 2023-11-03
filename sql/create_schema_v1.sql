@@ -17,6 +17,9 @@ CREATE TYPE action AS ENUM (
   'OP_ED',
   'EDITORIAL',
   'PERSONALIZED_TALKING_POINTS',
+  'PHONE_BANKING',
+  'TEXT_BANKING',
+  'FUNDRAISING',
   'OTHER'
 );
 CREATE TYPE audience AS ENUM (
@@ -55,9 +58,9 @@ CREATE TABLE IF NOT EXISTS hoa_events (
 );
 
 CREATE TABLE IF NOT EXISTS luma_attendance (
-  event_id INTEGER REFERENCES hoa_events(id) ON DELETE RESTRICT,
+  event_id INTEGER NOT NULL REFERENCES hoa_events(id) ON DELETE RESTRICT,
   email CITEXT NOT NULL,
-  signedup_at TIMESTAMPTZ,
+  signedup_at TIMESTAMPTZ NOT NULL,
   did_join_event BOOL NOT NULL,
   UNIQUE (event_id, email)
 );

@@ -1,14 +1,16 @@
 import csv
 import json
-import pprint
 import logging
+import pprint
 import uuid
 from datetime import date
 from enum import Enum, unique
-from typing import List, Mapping, NamedTuple, Optional, Tuple
+from typing import List, Mapping, NamedTuple, Optional
 
 import click
 import dateparser
+from models.action import Action
+from models.action_intent import ActionIntent
 
 LOG = logging.getLogger(__name__)
 
@@ -25,33 +27,6 @@ class Audience(Enum):
 class ActionSource(Enum):
     HOUR_OF_ACTION = "HOUR_OF_ACTION"
     ANYTIME_ACTION = "ANYTIME_ACTION"
-
-
-@unique
-class ActionIntent(Enum):
-    ADVOCACY = "ADVOCACY"
-    ELECTORAL = "ELECTORAL"
-
-
-@unique
-class Action(Enum):
-    PHONE_CALLS = "PHONE_CALLS"
-    CONSTITUENT_CONTACT = "CONSTITUENT_CONTACT"
-    PERSONAL_MEETING = "PERSONAL_MEETING"
-    SOCIAL_MEDIA_CONTACT = "SOCIAL_MEDIA_CONTACT"
-    TOWN_HALL = "TOWN_HALL"
-    LOBBY_MEETING = "LOBBY_MEETING"
-    RELATIONAL_ORGANIZING_PERSONAL_MESSAGE = "RELATIONAL_ORGANIZING_PERSONAL_MESSAGE"
-    RELATIONAL_ORGANIZING_SOCIAL_MEDIA = "RELATIONAL_ORGANIZING_SOCIAL_MEDIA"
-    BLOG_POST = "BLOG_POST"
-    ARTICLE_BY_REPORTER = "ARTICLE_BY_REPORTER"
-    PODCAST = "PODCAST"
-    TV_BROADCAST = "TV_BROADCAST"
-    LETTER_TO_THE_EDITOR = "LETTER_TO_THE_EDITOR"
-    OP_ED = "OP_ED"
-    EDITORIAL = "EDITORIAL"
-    PERSONALIZED_TALKING_POINTS = "PERSONALIZED_TALKING_POINTS"
-    OTHER = "OTHER"
 
 
 class RawAction(NamedTuple):
@@ -256,9 +231,7 @@ def get_actions_from_form_responses(form_responses_filename, output_filename):
             writer.writeheader()
             for record in reader:
                 form_response = FormResponse(record)
-                # print(form_response)
                 for raw_action in form_response.as_raw_actions():
-                    # print(raw_action)
                     writer.writerow(raw_action.to_csv_record())
 
 
